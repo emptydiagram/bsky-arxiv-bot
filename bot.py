@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone, timedelta
 import email
 import os
 import sys
@@ -10,18 +10,24 @@ import requests
 
 DB_FILE_PATH = "pubdb.txt"
 
-def read_db(db_path):
-    now = datetime.now()
+# currently (Feb 2025) this feed (and all arxiv feeds?) don't update on the weekends. they update Sunday-Thursday night I think
+# TODO: drop to 3 days?
+NUM_DAYS_RETAIN = 7
 
+def read_db(db_path):
     if not os.path.exists(db_path):
         return set()
     with open(db_path, 'r') as f:
         lines = f.readlines()
+    now = datetime.now(tz=timezone.utc)
+    retain_limit = now - timedelta(days=NUM_DAYS_RETAIN)
     db = set()
     for line in lines:
         guid, published_str = line.strip().split('\t')
         pub_date = datetime.fromisoformat(published_str)
-        db.add((guid, pub_date))
+        # if entry is older than N days, remove from database
+        if retain_limit <= pub_date:
+            db.add((guid, pub_date))
     return db
 
 def write_db(db_path, db):
