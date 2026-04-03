@@ -54,6 +54,31 @@ def make_posts(paper_infos, delay_secs=2):
         print(f"Posted to: {result.uri}")
         time.sleep(delay_secs)
 
+def apply_bot_label():
+    from atproto import models
+    client = atproto.Client()
+    client.login(os.environ["BSKY_HANDLE"], os.environ["BSKY_PASS"])
+    repo_record = client.com.atproto.repo.get_record({
+        'collection': models.ids.AppBskyActorProfile,
+        'repo': client.me.did,
+        'rkey': 'self'
+    }).value
+    client.com.atproto.repo.put_record(models.ComAtprotoRepoPutRecord.Data(
+        collection=models.ids.AppBskyActorProfile,
+        repo=client.me.did,
+        rkey='self',
+        record=models.AppBskyActorProfile.Record(
+            display_name=repo_record.display_name,
+            description=repo_record.description,
+            avatar=repo_record.avatar, # This is now a BlobRef, not a string
+            banner=repo_record.banner, # This is now a BlobRef, not a string
+            labels=models.ComAtprotoLabelDefs.SelfLabels(
+                values=[models.ComAtprotoLabelDefs.SelfLabel(val='bot')]
+            )
+        )
+    ))
+    print("Bot label applied successfully.")
+
 
 def run():
     if len(sys.argv) != 2:
@@ -63,6 +88,8 @@ def run():
     subject = sys.argv[1]
     rss_url = f"https://rss.arxiv.org/rss/{subject}"
     response = requests.get(rss_url)
+
+    apply_bot_label()
 
     feed = feedparser.parse(response.content)
     if feed.bozo:
