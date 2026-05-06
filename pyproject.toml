@@ -1,0 +1,10 @@
+[project]
+name = "bsky-arxiv-bot"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.14"
+dependencies = [
+    "atproto>=0.0.65",
+    "feedparser>=6.0.12",
+    "requests>=2.33.1",
+]

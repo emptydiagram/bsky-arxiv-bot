@@ -6,4 +6,4 @@ set -a
 source config.env
 set +a
 
-python bot.py cs.NE
+uv run main.py cs.NE
